@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { activateChat, deactivateChat } from './store';
+import fetch from 'node-fetch';
 
 const mapStateToProps = (state) => {
   return {
@@ -9,7 +10,8 @@ const mapStateToProps = (state) => {
 };
 
 const ChatButton = ({ chatActive, activateChat, deactivateChat }) => {
-  const [message, setMessage] = useState('');
+  const [userMessage, setUserMessage] = useState('');
+  const [responseMessage, setResponseMessage] = useState('');
 
   const handleClick = () => {
     if (chatActive) {
@@ -19,25 +21,21 @@ const ChatButton = ({ chatActive, activateChat, deactivateChat }) => {
     }
   };
 
-  const handleMessageSend = () => {
-    // Make a request to http://jsonplaceholder.typicode.com/posts with user's message in the body
-    fetch('http://jsonplaceholder.typicode.com/posts', {
+  const handleInputChange = (event) => {
+    setUserMessage(event.target.value);
+  };
+
+  const handleSendMessage = async () => {
+    const response = await fetch('http://jsonplaceholder.typicode.com/posts', {
       method: 'POST',
-      body: JSON.stringify({
-        message: message,
-      }),
+      body: JSON.stringify({ message: userMessage }),
       headers: {
         'Content-Type': 'application/json',
       },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        // Handle the response data (echoed message)
-        console.log('Echoed message:', data.message);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
+    });
+
+    const data = await response.json();
+    setResponseMessage(data.message);
   };
 
   return (
@@ -47,12 +45,9 @@ const ChatButton = ({ chatActive, activateChat, deactivateChat }) => {
       </button>
       {chatActive && (
         <div>
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-          <button onClick={handleMessageSend}>Send Message</button>
+          <input type="text" value={userMessage} onChange={handleInputChange} />
+          <button onClick={handleSendMessage}>Send Message</button>
+          {responseMessage && <p>Response: {responseMessage}</p>}
         </div>
       )}
     </div>
